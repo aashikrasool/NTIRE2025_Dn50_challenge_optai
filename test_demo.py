@@ -20,7 +20,7 @@ def select_model(args, device):
         name = f"{model_id}_optDenoiser"
         data_range = 1.0  # Assuming 1.0 for normalized image data
 
-        model_path = os.path.join('model_zoo', 'team29_optDenoiser1.pth')
+        model_path = os.path.join('model_zoo', 'team29_optDenoiser.pth')
         if not os.path.exists(model_path):
             raise FileNotFoundError(f"Checkpoint not found at {model_path}")
 
