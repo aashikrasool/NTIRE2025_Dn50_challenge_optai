@@ -15,24 +15,38 @@ def select_model(args, device):
     # Model ID is assigned according to the order of the submissions.
     # Different networks are trained with input range of either [0,1] or [0,255]. The range is determined manually.
     model_id = args.model_id
-    if model_id == 0:
-        # SGN test
-        from models.team00_SGN import SGNDN3
-        name, data_range = f"{model_id:02}_RFDN_baseline", 1.0
-        model_path = os.path.join('model_zoo', 'team00_sgn.ckpt')
-        model = SGNDN3()
+    if model_id == 29:
+        from models.team29_optDenoiser import RetinexFormer_2stageAOAB
+        name = f"{model_id}_optDenoiser"
+        data_range = 1.0  # Assuming 1.0 for normalized image data
 
-        state_dict = torch.load(model_path)["state_dict"]
-        state_dict.pop("current_val_metric")
-        state_dict.pop("best_val_metric")
-        state_dict.pop("best_iter")
-        new_state_dict = {}
-        for k, v in state_dict.items():
-            if k.find("model.") >= 0:
-                new_state_dict[k.replace("model.", "")] = v
-        model.load_state_dict(new_state_dict, strict=True)
+        model_path = os.path.join('model_zoo', 'team29_optDenoiser1.pth')
+        if not os.path.exists(model_path):
+            raise FileNotFoundError(f"Checkpoint not found at {model_path}")
+
+        # Initialize the model
+        model = RetinexFormer_2stageAOAB(n_feat=40, num_blocks=[1, 2, 2]).to(device)
+
+        # Load checkpoint
+        checkpoint = torch.load(model_path)
+        if 'stateDictEG' in checkpoint:
+            model.load_state_dict(checkpoint['stateDictEG'], strict=True)
+            print(checkpoint['stateDictEG'])
+        else:
+            raise KeyError("Expected 'stateDictEG' in the checkpoint but not found.")
+
+        # Prepare model for inference
+        model.eval()
+        for param in model.parameters():
+            param.requires_grad = False
+
+        model = model.to(device)
+        tile = None  # If using tiled inference, update this accordingly
+
+        return model, name, data_range, tile
+
     else:
-        raise NotImplementedError(f"Model {model_id} is not implemented.")
+        raise NotImplementedError(f"Model with model_id {model_id} is not implemented.")
 
     # print(model)
     model.eval()
@@ -292,7 +306,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser("NTIRE2025-Dn50")
     parser.add_argument("--data_dir", default="./NTIRE2025_Challenge/input", type=str)
     parser.add_argument("--save_dir", default="./NTIRE2025_Challenge/results", type=str)
-    parser.add_argument("--model_id", default=0, type=int)
+    parser.add_argument("--model_id", default=29, type=int)
     parser.add_argument("--include_test", action="store_true", help="Inference on the DIV2K test set")
     parser.add_argument("--hybrid_test", action="store_true", help="Hybrid test on DIV2K and LSDIR test set")
     parser.add_argument("--ssim", action="store_true", help="Calculate SSIM")
