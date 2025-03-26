@@ -15,12 +15,12 @@ def select_model(args, device):
     # Model ID is assigned according to the order of the submissions.
     # Different networks are trained with input range of either [0,1] or [0,255]. The range is determined manually.
     model_id = args.model_id
-    if model_id == 11:
-        from models.team11_optDenoiser import RetinexFormer_2stageAOAB
+    if model_id == 29:
+        from models.team29_optDenoiser import RetinexFormer_2stageAOAB
         name = f"{model_id}_optDenoiser"
         data_range = 1.0  # Assuming 1.0 for normalized image data
 
-        model_path = os.path.join('model_zoo', 'team11_optDenoiser.pth')
+        model_path = os.path.join('model_zoo', 'team29_optDenoiser1.pth')
         if not os.path.exists(model_path):
             raise FileNotFoundError(f"Checkpoint not found at {model_path}")
 
